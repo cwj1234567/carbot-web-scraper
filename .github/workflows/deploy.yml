@@ -1,0 +1,29 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push Docker image to Amazon ECR
+      env:
+        # Common Vars
+        AWS_REGION: us-east-1
+        SERVICE_NAME: carbot-scraper
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $REGISTRY/$SERVICE_NAME:$IMAGE_TAG .
+        docker push $REGISTRY/$SERVICE_NAME:$IMAGE_TAG
