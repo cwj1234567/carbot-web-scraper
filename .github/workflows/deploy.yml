@@ -24,10 +24,11 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         role-duration-seconds: 900 # the ttl of the session, in seconds.
         aws-region: ${{ env.AWS_REGION }}
-    - name: Copy app config file from s3
+    - name: Copy app config files from s3
       working-directory: WebScraper
       run: |
-        aws s3 cp s3://${{ secrets.APP_CONFIG_BUCKET }}/webscraper/appsettings.json ./
+        aws s3 cp s3://${{ secrets.APPSETTINGS_URI }} ./
+        aws s3 cp s3://${{ secrets.PEM_URI }} ./
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
