@@ -27,8 +27,8 @@ jobs:
     - name: Copy app config files from s3
       working-directory: WebScraper
       run: |
-        aws s3 cp s3://${{ secrets.APPSETTINGS_URI }} ./
-        aws s3 cp s3://${{ secrets.PEMFILE_URI }} ./
+        aws s3 cp ${{ secrets.APPSETTINGS_URI }} ./
+        aws s3 cp ${{ secrets.PEMFILE_URI }} ./
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
