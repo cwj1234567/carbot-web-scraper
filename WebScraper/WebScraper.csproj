@@ -32,16 +32,22 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+        <PackageReference Include="SSH.NET" Version="2020.0.2" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="appsettings.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <None Remove="appsettings.json" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="privatekey.pem">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-        <Exec Command="if test ! -e appsettings.json; then&#xA;  aws s3 cp s3://carbot-app-config-files/webscraper/appsettings.json ./&#xA;  cp appsettings.json $(OutDir)&#xA;fi&#xA;" />
-    </Target>
+    <ItemGroup>
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
 
 </Project>
