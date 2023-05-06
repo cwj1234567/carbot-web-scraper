@@ -6,18 +6,19 @@ using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Cliver;
 using HtmlAgilityPack;
+using WebScraper.Database;
 
 namespace WebScraper.Services;
 
 public class BatScraperService : IScraperService
 {
     private readonly ILogger<BatScraperService> _logger;
-    private readonly PgsqlHelper _pgsqlHelper;
+    private readonly PgConnectionFactory _connFactory;
     
-    public BatScraperService(ILogger<BatScraperService> logger, PgsqlHelper pgsqlService)
+    public BatScraperService(ILogger<BatScraperService> logger, PgConnectionFactory connFactory)
     {
         _logger = logger;
-        _pgsqlHelper = pgsqlService;
+        _connFactory = connFactory;
     }
 
     public async Task Scrape()
@@ -27,7 +28,7 @@ public class BatScraperService : IScraperService
         using var httpClient = new HttpClient();
 
         IEnumerable<int> keywordPageIds;
-        using (var connection = _pgsqlHelper.CreateConnection())
+        using (var connection = _connFactory.CreateConnection())
         {
             keywordPageIds =
                 connection.Query<int>("SELECT keyword_page_id FROM bringatrailer.keywordpages");
@@ -132,7 +133,7 @@ public class BatScraperService : IScraperService
 
                     try
                     {
-                        using (var connection = _pgsqlHelper.CreateConnection())
+                        using (var connection = _connFactory.CreateConnection())
                         {
                             await connection.ExecuteAsync(
                                 "insert into bringatrailer.auctions(auction_id, auction_url, year, make, model, bid_value, end_date, ended, updated_at, keyword_page_id ) " +
@@ -219,7 +220,7 @@ public class BatScraperService : IScraperService
 
     private List<Item> GetNonExistentAuctionItems(List<Item> items)
     {
-        using var connection = _pgsqlHelper.CreateConnection();
+        using var connection = _connFactory.CreateConnection();
         connection.Open();
 
         // Get the list of URLs from the items

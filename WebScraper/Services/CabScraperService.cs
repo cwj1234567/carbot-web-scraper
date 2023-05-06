@@ -2,6 +2,7 @@ using Cliver;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
+using WebScraper.Database;
 using WebScraper.Helpers;
 using WebScraper.Models;
 using WebScraper.Services.Interfaces;
@@ -12,14 +13,14 @@ namespace WebScraper.Services;
 public class CabScraperService : IScraperService
 {
     private readonly ILogger<CabScraperService> _logger;
-    private readonly PgsqlHelper _pgsqlHelper;
+    private readonly PgConnectionFactory _connFactory;
     private readonly IWebDriver _webDriver;
     
-    public CabScraperService(ILogger<CabScraperService> logger, PgsqlHelper pgsqlService,
+    public CabScraperService(ILogger<CabScraperService> logger, PgConnectionFactory connFactory,
         WebDriverHelper webDriverHelper)
     {
         _logger = logger;
-        _pgsqlHelper = pgsqlService;
+        _connFactory = connFactory;
         _webDriver = webDriverHelper.Driver;
     }
 
@@ -167,7 +168,7 @@ public class CabScraperService : IScraperService
     public async Task Scrape()
     {
         _logger.LogInformation("Scraping carsandbids.com");
-        using var dbConnection = _pgsqlHelper.CreateConnection();
+        using var dbConnection = _connFactory.CreateConnection();
 
         var searchStrings =
             dbConnection.Query<SearchStrings>(

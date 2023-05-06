@@ -6,6 +6,7 @@ using Cliver;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
+using WebScraper.Database;
 using WebScraper.Helpers;
 using WebScraper.Models.Ebay;
 using WebScraper.Services.Interfaces;
@@ -16,14 +17,14 @@ namespace WebScraper.Services;
 public class EbayScraperService : IScraperService
 {
     private readonly ILogger<EbayScraperService> _logger;
-    private readonly PgsqlHelper _pgsqlHelper;
+    private readonly PgConnectionFactory _connFactory;
     private readonly IWebDriver _webDriver;
 
-    public EbayScraperService(ILogger<EbayScraperService> logger, PgsqlHelper pgsqlService,
+    public EbayScraperService(ILogger<EbayScraperService> logger, PgConnectionFactory connFactory,
         WebDriverHelper webDriverHelper)
     {
         _logger = logger;
-        _pgsqlHelper = pgsqlService;
+        _connFactory = connFactory;
         _webDriver = webDriverHelper.Driver;
     }
 
@@ -54,7 +55,7 @@ public class EbayScraperService : IScraperService
             var linkCount = hrefList.Count();
             foreach (var href in hrefList)
             {
-                using var connection = _pgsqlHelper.CreateConnection();
+                using var connection = _connFactory.CreateConnection();
                 await connection.ExecuteAsync(
                     "insert into ebaymotors.links(auction_id, auction_url,is_processed,search_config_id,found_at) " +
                     "values (@AuctionId, @Url, @IsProcessed,@searchConfigId, now()) " +
@@ -82,7 +83,7 @@ public class EbayScraperService : IScraperService
         
         await ProcessDbLinks();
         
-        using var connection = _pgsqlHelper.CreateConnection();
+        using var connection = _connFactory.CreateConnection();
 
         _logger.LogInformation("Retrieving search configs");
         var configs = await connection.QueryAsync<SearchConfig>(
@@ -104,7 +105,7 @@ public class EbayScraperService : IScraperService
     
     private async Task ProcessDbLinks()
     {
-        var connection = _pgsqlHelper.CreateConnection();
+        var connection = _connFactory.CreateConnection();
         var unprocessedLinks = await connection.QueryAsync<AuctionLink>(
             "SELECT auction_id, auction_url, is_processed, search_config_id FROM ebaymotors.links  WHERE (processing_attempts IS NULL OR processing_attempts < 3) AND (is_processed IS NULL OR is_processed = false)");
 
@@ -245,7 +246,7 @@ public class EbayScraperService : IScraperService
     private async Task MarkLinkAsProcessed(Guid auctionId, string errorMessage)
     {
         _logger.LogInformation("Marking auction as processed (auctionId = {auctionId})", auctionId);
-        using var connection = _pgsqlHelper.CreateConnection();
+        using var connection = _connFactory.CreateConnection();
         if(string.IsNullOrEmpty(errorMessage))
         {
             await connection.ExecuteAsync(
@@ -265,7 +266,7 @@ public class EbayScraperService : IScraperService
         string statusText,int searchConfigId)
     {
         _logger.LogInformation("Inserting data for auction (auctionId = {auctionId})", auctionId);
-        using var connection = _pgsqlHelper.CreateConnection();
+        using var connection = _connFactory.CreateConnection();
 
 
         var parameterJson = JsonSerializer.Serialize(parameterDict);
