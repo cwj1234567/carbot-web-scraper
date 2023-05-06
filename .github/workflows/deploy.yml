@@ -18,12 +18,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials with assumed role
+    - name: Assume AWS role
       uses: aws-actions/configure-aws-credentials@v1.7.0
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         role-duration-seconds: 900 # the ttl of the session, in seconds.
         aws-region: ${{ env.AWS_REGION }}
+    - name: Copy app config file from s3
+      working-directory: WebScraper
+      run: |
+        aws s3 cp s3://carbot-app-config-files/webscraper/appsettings.json ./
 
     - name: Login to Amazon ECR
       id: login-ecr
