@@ -66,7 +66,7 @@ namespace CarbotWebScraper
                             LogGroup = new LogGroup(this, $"loggroup-{task}", new LogGroupProps
                             {
                                 LogGroupName = $"/aws/ecs/scraper/{task}",
-                                Retention = RetentionDays.SIXTY_DAYS
+                                Retention = RetentionDays.THREE_MONTHS
                             }),
                             StreamPrefix = task
                         })
@@ -91,3 +91,4 @@ namespace CarbotWebScraper
             }
         }
     }
+}
