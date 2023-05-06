@@ -47,8 +47,7 @@ namespace CarbotWebScraper
                 // Add the Selenium container
                 taskDefinition.AddContainer($"SeleniumContainer", new ContainerDefinitionOptions
                 {
-                    Image = ContainerImage.FromRegistry("selenium/standalone-chrome:4.0.0"),
-                    MemoryLimitMiB = 512
+                    Image = ContainerImage.FromRegistry("selenium/standalone-chrome:4.0.0")
                 });
 
                 // Add the WebScraper container
@@ -56,7 +55,6 @@ namespace CarbotWebScraper
                     new ContainerDefinitionOptions
                     {
                         Image = ContainerImage.FromEcrRepository(ecrRepository),
-                        MemoryLimitMiB = 512,
                         Environment = new Dictionary<string, string>
                         {
                             { "SCRAPER_SERVICE", task }
