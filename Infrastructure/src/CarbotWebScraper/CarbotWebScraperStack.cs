@@ -77,17 +77,19 @@ namespace CarbotWebScraper
                     ManagedPolicy.FromAwsManagedPolicyName("AmazonS3FullAccess"));
 
                 // Create a scheduled Fargate task
-                var scheduledTask = new ScheduledFargateTask(this, $"scheduled-task-{task}", new ScheduledFargateTaskProps
-                {
-                    Cluster = cluster,
-                    ScheduledFargateTaskDefinitionOptions = new ScheduledFargateTaskDefinitionOptions
+                var scheduledTask = new ScheduledFargateTask(this, $"scheduled-task-{task}",
+                    new ScheduledFargateTaskProps
                     {
-                        TaskDefinition = taskDefinition,
-                    },
-                    SubnetSelection = new SubnetSelection { SubnetType = SubnetType.PUBLIC },
-                    Schedule = Schedule.Cron(new Amazon.CDK.AWS.ApplicationAutoScaling.CronOptions() { Day = "*", Hour = "0", Minute = "0", Month = "*" }),
-                    RuleName = $"scheduled-task-rule-{task}"
-                });
+                        Cluster = cluster,
+                        ScheduledFargateTaskDefinitionOptions = new ScheduledFargateTaskDefinitionOptions
+                        {
+                            TaskDefinition = taskDefinition,
+                        },
+                        SubnetSelection = new SubnetSelection { SubnetType = SubnetType.PUBLIC },
+                        Schedule = Schedule.Cron(new Amazon.CDK.AWS.ApplicationAutoScaling.CronOptions()
+                            { Day = "*", Hour = "0", Minute = "0", Month = "*" }),
+                        RuleName = $"scheduled-task-rule-{task}"
+                    });
             }
         }
     }
