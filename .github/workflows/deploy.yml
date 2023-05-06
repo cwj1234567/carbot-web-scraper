@@ -27,7 +27,7 @@ jobs:
     - name: Copy app config file from s3
       working-directory: WebScraper
       run: |
-        aws s3 cp s3://carbot-app-config-files/webscraper/appsettings.json ./
+        aws s3 cp s3://${{ secrets.APP_CONFIG_BUCKET }}/webscraper/appsettings.json ./
 
     - name: Login to Amazon ECR
       id: login-ecr
