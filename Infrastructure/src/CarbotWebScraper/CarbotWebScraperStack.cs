@@ -5,6 +5,7 @@ using Amazon.CDK.AWS.ECR;
 using Amazon.CDK.AWS.ECS;
 using Amazon.CDK.AWS.ECS.Patterns;
 using Amazon.CDK.AWS.IAM;
+using Amazon.CDK.AWS.Logs;
 using Constructs;
 using Schedule = Amazon.CDK.AWS.ApplicationAutoScaling.Schedule;
 
@@ -29,9 +30,8 @@ namespace CarbotWebScraper
             // Define the ECR repository
             var ecrRepository = Repository.FromRepositoryName(this, "WebScraperRepo", "carbot-scraper");
 
-            // three different tasks for each site
-            var scraperTasks = new List<string> {"cab", "ebay", "bat"};
-
+            // Three different tasks for each site
+            var scraperTasks = new List<string> { "cab", "ebay", "bat" };
 
             // Iterate through envVars and create task definitions, services, and security groups
             foreach (var task in scraperTasks)
@@ -60,34 +60,22 @@ namespace CarbotWebScraper
                         Environment = new Dictionary<string, string>
                         {
                             { "SCRAPER_SERVICE", task }
-                        }
+                        },
+                        Logging = new AwsLogDriver(new AwsLogDriverProps
+                        {
+                            LogGroup = new LogGroup(this, $"loggroup-{task}", new LogGroupProps
+                            {
+                                LogGroupName = $"/aws/ecs/scraper/{task}",
+                                Retention = RetentionDays.SIXTY_DAYS
+                            }),
+                            StreamPrefix = task
+                        })
                     });
 
-                // Grant the task definition the required permissions
+                // Grant the task definition Amazon S3 full access
                 taskDefinition.TaskRole.AddManagedPolicy(
-                    ManagedPolicy.FromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"));
-                taskDefinition.TaskRole.AddManagedPolicy(
-                    ManagedPolicy.FromAwsManagedPolicyName("AWSXRayDaemonWriteAccess"));
+                    ManagedPolicy.FromAwsManagedPolicyName("AmazonS3FullAccess"));
 
-
-                // Create a Fargate service
-                var service = new FargateService(this, $"scraper-service-{task}", new FargateServiceProps
-                {
-                    Cluster = cluster,
-                    TaskDefinition = taskDefinition,
-                    DesiredCount = 1,
-                    AssignPublicIp = true,
-                    VpcSubnets = new SubnetSelection { SubnetType = SubnetType.PUBLIC },
-                });
-
-
-                // Create a security group and add the required ingress rules
-                var securityGroup = new SecurityGroup(this, $"scraper-sg-{task}", new SecurityGroupProps
-                {
-                    Vpc = vpc,
-                    AllowAllOutbound = true
-                });
-                
                 // Create a scheduled Fargate task
                 var scheduledTask = new ScheduledFargateTask(this, $"scheduled-task-{task}", new ScheduledFargateTaskProps
                 {
@@ -97,13 +85,9 @@ namespace CarbotWebScraper
                         TaskDefinition = taskDefinition,
                     },
                     SubnetSelection = new SubnetSelection { SubnetType = SubnetType.PUBLIC },
-                    Schedule = Schedule.Cron(new Amazon.CDK.AWS.ApplicationAutoScaling.CronOptions(){Day = "*",Hour = "0",Minute = "0",Month = "*"}),
+                    Schedule = Schedule.Cron(new Amazon.CDK.AWS.ApplicationAutoScaling.CronOptions() { Day = "*", Hour = "0", Minute = "0", Month = "*" }),
                     RuleName = $"scheduled-task-rule-{task}"
                 });
-
-                
-                
             }
         }
     }
-}
