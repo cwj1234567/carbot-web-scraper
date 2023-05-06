@@ -29,12 +29,12 @@ public class EbayScraperService : IScraperService
     }
 
     private async Task UpdateAuctionLinks(SearchConfig config)
-    
+
     {
         var make = config.MakeEncoded ?? WebUtility.UrlEncode(config.Make);
         var model = config.ModelEncoded ?? WebUtility.UrlEncode(config.Model);
         var years = config.Years;
-        
+
         var listingsUrl =
             $"https://www.ebay.com/sch/Cars-Trucks/6001/i.html?_dcat=6001&_fsrp=1&_vxp=mtr&_dmpt=US_Cars_Trucks&Transmission=-1&Make={make}&_ipg=240&LH_Sold=1&_sofindtype=21&_sacat=6001&Model={model}&_sop=12&fisc=c6001&_sadis=200&Model%2520Year={years}&LH_All=1&LH_PrefLoc=1";
 
@@ -78,31 +78,31 @@ public class EbayScraperService : IScraperService
     public async Task Scrape()
     {
         _logger.LogInformation("Starting Ebay Scraper");
-        
+
         _logger.LogInformation("Processing unprocessed links from previous runs");
-        
+
         await ProcessDbLinks();
-        
+
         using var connection = _connFactory.CreateConnection();
 
         _logger.LogInformation("Retrieving search configs");
         var configs = await connection.QueryAsync<SearchConfig>(
             "SELECT search_config_id, vehicle_id, make, model, years, body_type, make_encoded, model_encoded FROM ebaymotors.searchconfig;");
 
-        
+
         _logger.LogInformation("Searching for new auction links");
-        
+
         foreach (var config in configs)
             await UpdateAuctionLinks(config);
-        
+
         _logger.LogInformation("Finished searching for new auction links");
 
         await ProcessDbLinks();
-        
+
         _webDriver.Quit();
         _webDriver.Dispose();
     }
-    
+
     private async Task ProcessDbLinks()
     {
         var connection = _connFactory.CreateConnection();
@@ -136,7 +136,7 @@ public class EbayScraperService : IScraperService
             }
         }
     }
-    
+
     private async Task ProcessLink(AuctionLink link)
     {
         var errorMessage = string.Empty;
@@ -225,7 +225,8 @@ public class EbayScraperService : IScraperService
                 }
             }
 
-            await InsertData(parameterDict, price, link.AuctionId, parsedDateTime.DateTime, statusElementText, link.SearchConfigId);
+            await InsertData(parameterDict, price, link.AuctionId, parsedDateTime.DateTime, statusElementText,
+                link.SearchConfigId);
         }
         catch (ListingIssueException ex)
         {
@@ -247,7 +248,7 @@ public class EbayScraperService : IScraperService
     {
         _logger.LogInformation("Marking auction as processed (auctionId = {auctionId})", auctionId);
         using var connection = _connFactory.CreateConnection();
-        if(string.IsNullOrEmpty(errorMessage))
+        if (string.IsNullOrEmpty(errorMessage))
         {
             await connection.ExecuteAsync(
                 "update ebaymotors.links set is_processed = true, processed_at = now(), error_message = @errorMessage, processing_attempts = COALESCE(processing_attempts, 0) + 1 where auction_id = @AuctionId;",
@@ -263,7 +264,7 @@ public class EbayScraperService : IScraperService
 
 
     private async Task InsertData(Dictionary<string, string> parameterDict, string price, Guid auctionId, DateTime date,
-        string statusText,int searchConfigId)
+        string statusText, int searchConfigId)
     {
         _logger.LogInformation("Inserting data for auction (auctionId = {auctionId})", auctionId);
         using var connection = _connFactory.CreateConnection();

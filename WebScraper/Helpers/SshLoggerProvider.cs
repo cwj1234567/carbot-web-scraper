@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using WebScraper.Helpers;
 
 public class SshLoggerProvider : ILoggerProvider
 {

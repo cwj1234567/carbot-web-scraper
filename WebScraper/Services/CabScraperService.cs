@@ -15,7 +15,7 @@ public class CabScraperService : IScraperService
     private readonly ILogger<CabScraperService> _logger;
     private readonly PgConnectionFactory _connFactory;
     private readonly IWebDriver _webDriver;
-    
+
     public CabScraperService(ILogger<CabScraperService> logger, PgConnectionFactory connFactory,
         WebDriverHelper webDriverHelper)
     {
@@ -197,7 +197,6 @@ public class CabScraperService : IScraperService
         _logger.LogInformation("Processing {linksToProcessCount} links", linksToProcess.Count());
         foreach (var link in linksToProcess)
         {
-            
             CabAuctionItem auction;
             try
             {

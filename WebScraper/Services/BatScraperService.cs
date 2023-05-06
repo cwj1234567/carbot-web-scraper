@@ -14,7 +14,7 @@ public class BatScraperService : IScraperService
 {
     private readonly ILogger<BatScraperService> _logger;
     private readonly PgConnectionFactory _connFactory;
-    
+
     public BatScraperService(ILogger<BatScraperService> logger, PgConnectionFactory connFactory)
     {
         _logger = logger;
@@ -52,7 +52,6 @@ public class BatScraperService : IScraperService
 
                 foreach (var item in newItems)
                 {
-                    
                     DateTime endDate;
                     string[] splitUrl;
                     try
@@ -170,7 +169,6 @@ public class BatScraperService : IScraperService
                 page++;
             }
         }
-
     }
 
     private async Task<Dictionary<string, string>> ValidateVehicleInfo(string url)

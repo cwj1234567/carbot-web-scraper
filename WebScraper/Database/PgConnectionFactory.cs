@@ -1,9 +1,7 @@
 using System.Data;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Npgsql;
 using Renci.SshNet;
-using WebScraper.Database;
 
 namespace WebScraper.Database
 {
@@ -13,7 +11,6 @@ namespace WebScraper.Database
 
         public PgConnectionFactory(IConfiguration configuration, SshTunnel sshTunnel)
         {
-           
             if (string.IsNullOrEmpty(_connectionString))
             {
                 // Get the SSH tunnel singleton instance

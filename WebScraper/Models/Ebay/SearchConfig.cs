@@ -9,7 +9,6 @@ public class SearchConfig
     public string Years { get; set; }
     public string BodyType { get; set; }
     public string? MakeEncoded { get; set; }
-    
-    public string? ModelEncoded { get; set; }
 
+    public string? ModelEncoded { get; set; }
 }
