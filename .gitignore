@@ -478,3 +478,4 @@ $RECYCLE.BIN/
 WebScraper/appsettings.json
 **/.idea/
 Infrastructure/cdk.out/cdk.out
+privatekey.pem
