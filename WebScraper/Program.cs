@@ -60,9 +60,7 @@ var builder = new ConfigurationBuilder();
     try
     {
         
-        await host.Services.GetService<CabScraperService>().Test();
-        
-        
+     
         Log.Logger.Information("Waiting ~30s for chrome driver to start");
         await Task.Delay(30000);
 
