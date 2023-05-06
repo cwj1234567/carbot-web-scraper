@@ -1,5 +1,4 @@
-name: Docker Build and Push with Assume Role
-
+name: Docker Build and Deploy
 on:
   workflow_dispatch:
 
