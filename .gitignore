@@ -480,4 +480,4 @@ WebScraper/appsettings.json
 Infrastructure/cdk.out/cdk.out
 **/*cdk.out*
 
-*.pem
+
