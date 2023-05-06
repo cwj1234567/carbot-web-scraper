@@ -1,0 +1,19 @@
+{
+  "version": "31.0.0",
+  "files": {
+    "0420a6ade8388d17d0d3e5d1942810bef4b3f25c2bd54280878ad5e53823b86c": {
+      "source": {
+        "path": "CarbotWebScraperStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "0420a6ade8388d17d0d3e5d1942810bef4b3f25c2bd54280878ad5e53823b86c.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

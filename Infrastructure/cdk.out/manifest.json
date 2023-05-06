@@ -1,0 +1,412 @@
+{
+  "version": "31.0.0",
+  "artifacts": {
+    "CarbotWebScraperStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "CarbotWebScraperStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "CarbotWebScraperStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "CarbotWebScraperStack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/0420a6ade8388d17d0d3e5d1942810bef4b3f25c2bd54280878ad5e53823b86c.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "CarbotWebScraperStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "CarbotWebScraperStack.assets"
+      ],
+      "metadata": {
+        "/CarbotWebScraperStack/carbot-scraper-vpc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcF074AB01"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1Subnet06DFF8A7"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1RouteTableA3CFF91E"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1RouteTableAssociation03C0241F"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1DefaultRoute488E53C1"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/EIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1EIP6DD82DB5"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet1/NATGateway": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet1NATGatewayA09E1678"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2SubnetC3590B30"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2RouteTableF7B3DCB7"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2RouteTableAssociation344C0844"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2DefaultRouteBCCC430F"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/EIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2EIP6A383919"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PublicSubnet2/NATGateway": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPublicSubnet2NATGatewayB32B837F"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet1Subnet96857459"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet1RouteTable7295691A"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet1RouteTableAssociation0A47CC28"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet1DefaultRoute0E35B4E6"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet2Subnet36865B66"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet2RouteTableAD29C86E"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet2RouteTableAssociationF2FB3758"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/PrivateSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcPrivateSubnet2DefaultRoute9618523F"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/IGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcIGWFF036DC2"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-vpc/VPCGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscrapervpcVPCGW2D44DF5C"
+          }
+        ],
+        "/CarbotWebScraperStack/carbot-scraper-cluster/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "carbotscraperclusterB0816745"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/TaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabTaskRoleDE0E2DC3"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabEF81072B"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/ExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabExecutionRoleD128BCF2"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/ExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabExecutionRoleDefaultPolicyE816710E"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/EventsRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabEventsRoleE74FAF6F"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/EventsRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabEventsRoleDefaultPolicy516325E0"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-cab/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskcabSecurityGroup02581023"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-cab/Service": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperservicecabServiceFA01E68D"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-cab/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperservicecabSecurityGroupC52DB610"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-sg-cab/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapersgcabAE8DDD3A"
+          }
+        ],
+        "/CarbotWebScraperStack/scheduled-task-cab/ScheduledEventRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scheduledtaskcabScheduledEventRule43358F54"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/TaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayTaskRole7145174E"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayAFFCFC6E"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/ExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayExecutionRoleC916001F"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/ExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayExecutionRoleDefaultPolicy15AF1360"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/EventsRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayEventsRoleD55C65BA"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/EventsRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebayEventsRoleDefaultPolicyE88BEA60"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-ebay/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskebaySecurityGroup66E85EED"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-ebay/Service": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperserviceebayServiceB4E6B06F"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-ebay/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperserviceebaySecurityGroup29E54136"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-sg-ebay/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapersgebay4A885BF0"
+          }
+        ],
+        "/CarbotWebScraperStack/scheduled-task-ebay/ScheduledEventRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scheduledtaskebayScheduledEventRule776A1C5A"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/TaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatTaskRole3E40A84B"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbat49D75006"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/ExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatExecutionRole15C7160B"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/ExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatExecutionRoleDefaultPolicyC0C5277D"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/EventsRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatEventsRole54B02702"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/EventsRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatEventsRoleDefaultPolicyF938D7AC"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-task-bat/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapertaskbatSecurityGroup745C302B"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-bat/Service": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperservicebatService52B58A5E"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-service-bat/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scraperservicebatSecurityGroup08A0E162"
+          }
+        ],
+        "/CarbotWebScraperStack/scraper-sg-bat/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scrapersgbatAD00A68B"
+          }
+        ],
+        "/CarbotWebScraperStack/scheduled-task-bat/ScheduledEventRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scheduledtaskbatScheduledEventRule3D3A4A69"
+          }
+        ],
+        "/CarbotWebScraperStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/CarbotWebScraperStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/CarbotWebScraperStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/CarbotWebScraperStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "CarbotWebScraperStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebScraper", "WebScraper\WebScraper.csproj", "{0F7FC80D-74E1-474C-A663-AF91CD9EA199}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebScraper", "WebScraper.csproj", "{0F7FC80D-74E1-474C-A663-AF91CD9EA199}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
