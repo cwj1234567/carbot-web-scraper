@@ -28,7 +28,7 @@ jobs:
       working-directory: WebScraper
       run: |
         aws s3 cp s3://${{ secrets.APPSETTINGS_URI }} ./
-        aws s3 cp s3://${{ secrets.PEM_URI }} ./
+        aws s3 cp s3://${{ secrets.PEMFILE_URI }} ./
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
