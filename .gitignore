@@ -476,3 +476,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 WebScraper/appsettings.json
+**/.idea/
