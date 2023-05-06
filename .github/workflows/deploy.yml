@@ -1,13 +1,11 @@
-name: Docker Build and Push with Assume Role
-
+name: Docker Build and Deploy
 on:
   workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
   SERVICE_NAME: carbot-scraper
-  ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }} # Assuming you have stored the ARN in a secret named AWS_ROLE_ARN
-
+ 
 permissions:
   id-token: write
   contents: read
@@ -20,12 +18,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials with assumed role
+    - name: Assume AWS role
       uses: aws-actions/configure-aws-credentials@v1.7.0
       with:
-        role-to-assume: ${{ env.ROLE_ARN }}
-        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        role-duration-seconds: 900 # the ttl of the session, in seconds.
         aws-region: ${{ env.AWS_REGION }}
+    - name: Copy app config file from s3
+      working-directory: WebScraper
+      run: |
+        aws s3 cp s3://${{ secrets.APP_CONFIG_BUCKET }}/webscraper/appsettings.json ./
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -35,6 +37,7 @@ jobs:
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: latest
+      working-directory: WebScraper
       run: |
         docker build -t $REGISTRY/$SERVICE_NAME:$IMAGE_TAG .
         docker push $REGISTRY/$SERVICE_NAME:$IMAGE_TAG
