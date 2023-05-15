@@ -6,16 +6,13 @@ using Renci.SshNet;
 public class SshTunnel
 {
     private static SshTunnel _instance;
-    private static readonly object _lock = new object();
+    private static readonly object _lock = new();
     private static PrivateKeyFile _privateKeyFile;
     private static string _sshHost;
     private static int _sshPort;
     private static string _sshUsername;
     private static string _dbHost;
     private static int _dbPort;
-
-    public SshClient SshClient { get; }
-    public ForwardedPortLocal ForwardedPort { get; }
 
     public SshTunnel(IConfiguration configuration, ILogger logger)
     {
@@ -29,8 +26,8 @@ public class SshTunnel
 
 
             // Read the private key file content as a string
-            string privateKeyFilePath = Path.Combine(Directory.GetCurrentDirectory(), "privatekey.pem");
-            string privateKeyContent = File.ReadAllText(privateKeyFilePath);
+            var privateKeyFilePath = Path.Combine(Directory.GetCurrentDirectory(), "privatekey.pem");
+            var privateKeyContent = File.ReadAllText(privateKeyFilePath);
 
             // Convert the string to a MemoryStream
             using var privateKeyStream = new MemoryStream(Encoding.UTF8.GetBytes(privateKeyContent));
@@ -48,18 +45,16 @@ public class SshTunnel
         ForwardedPort.Start();
     }
 
+    public SshClient SshClient { get; }
+    public ForwardedPortLocal ForwardedPort { get; }
+
     public static SshTunnel GetInstance(IConfiguration configuration, ILogger logger)
     {
         if (_instance == null)
-        {
             lock (_lock)
             {
-                if (_instance == null)
-                {
-                    _instance = new SshTunnel(configuration, logger);
-                }
+                if (_instance == null) _instance = new SshTunnel(configuration, logger);
             }
-        }
 
         return _instance;
     }

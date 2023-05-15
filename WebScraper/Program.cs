@@ -1,20 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Serilog;
-using WebScraper.Database;
-using WebScraper.Services;
-using WebScraper.Helpers;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using WebScraper;
+using WebScraper.Database;
+using WebScraper.Helpers;
+using WebScraper.Services;
 using WebScraper.Services.Interfaces;
 
 var builder = new ConfigurationBuilder();
 
 // Add configuration from appsettings.json
 builder.AddJsonFile("appsettings.json",
-    optional: false,
-    reloadOnChange: true);
+    false,
+    true);
 
 // configure logging
 Log.Logger = new LoggerConfiguration()
@@ -26,7 +27,7 @@ Log.Logger = new LoggerConfiguration()
 Log.Logger.Information("Start");
 
 // map the c# pascal case model property names to the pgsql snake case column names
-Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 // build host and configure our DI services
 var host = Host.CreateDefaultBuilder()
@@ -91,4 +92,3 @@ finally
 
     Log.Logger.Information("Stop");
 }
-

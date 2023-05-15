@@ -1,19 +1,19 @@
-using Dapper;
-using Microsoft.Extensions.Logging;
-using WebScraper.Models;
-using WebScraper.Services.Interfaces;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Cliver;
+using Dapper;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
 using WebScraper.Database;
+using WebScraper.Models;
+using WebScraper.Services.Interfaces;
 
 namespace WebScraper.Services;
 
 public class BatScraperService : IScraperService
 {
-    private readonly ILogger<BatScraperService> _logger;
     private readonly PgConnectionFactory _connFactory;
+    private readonly ILogger<BatScraperService> _logger;
 
     public BatScraperService(ILogger<BatScraperService> logger, PgConnectionFactory connFactory)
     {
@@ -47,10 +47,7 @@ public class BatScraperService : IScraperService
 
                 var newItems = GetNonExistentAuctionItems(result?.items ?? throw new InvalidOperationException());
 
-                foreach (var item in newItems)
-                {
-                    await ProcessItem(item, keywordPageId).ConfigureAwait(false);
-                }
+                foreach (var item in newItems) await ProcessItem(item, keywordPageId).ConfigureAwait(false);
 
                 page++;
             } while (result.page_current != result.page_maximum);
@@ -79,7 +76,7 @@ public class BatScraperService : IScraperService
 
     private (string[] splitUrl, DateTime endDate, bool? ended, decimal bidValue) ProcessItemMetadata(Item item)
     {
-        var splitUrl = (item.url.Replace("https://bringatrailer.com/listing/", "")).Replace("/", "").Split("-");
+        var splitUrl = item.url.Replace("https://bringatrailer.com/listing/", "").Replace("/", "").Split("-");
         var endDate = ParseEndDate(item.subtitle);
         var (ended, bidValue) = ParseSubtitle(item.subtitle);
 
@@ -90,9 +87,7 @@ public class BatScraperService : IScraperService
     {
         if (!subtitle.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
                 out DateTimeRoutines.ParsedDateTime parsedDateTime))
-        {
             _logger.LogWarning("Could not parse date {date}", subtitle);
-        }
 
         return parsedDateTime.DateTime;
     }
@@ -188,7 +183,7 @@ public class BatScraperService : IScraperService
                     }).ConfigureAwait(false);
             }
         }
-        catch (System.IndexOutOfRangeException)
+        catch (IndexOutOfRangeException)
         {
             _logger.LogWarning("Could not parse url {url}", item.url);
             throw;

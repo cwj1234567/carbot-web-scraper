@@ -16,8 +16,8 @@ namespace WebScraper.Services;
 
 public class EbayScraperService : IScraperService
 {
-    private readonly ILogger<EbayScraperService> _logger;
     private readonly PgConnectionFactory _connFactory;
+    private readonly ILogger<EbayScraperService> _logger;
     private readonly IWebDriver _webDriver;
 
     public EbayScraperService(ILogger<EbayScraperService> logger, PgConnectionFactory connFactory,
@@ -26,6 +26,34 @@ public class EbayScraperService : IScraperService
         _logger = logger;
         _connFactory = connFactory;
         _webDriver = webDriverHelper.Driver;
+    }
+
+    public async Task RunTaskAsync()
+    {
+        _logger.LogInformation("Starting Ebay Scraper");
+
+        _logger.LogInformation("Processing unprocessed links from previous runs");
+
+        await ProcessDbLinks();
+
+        using var connection = _connFactory.CreateConnection();
+
+        _logger.LogInformation("Retrieving search configs");
+        var configs = await connection.QueryAsync<SearchConfig>(
+            "SELECT search_config_id, vehicle_id, make, model, years, body_type, make_encoded, model_encoded FROM ebaymotors.searchconfig;");
+
+
+        _logger.LogInformation("Searching for new auction links");
+
+        foreach (var config in configs)
+            await UpdateAuctionLinks(config);
+
+        _logger.LogInformation("Finished searching for new auction links");
+
+        await ProcessDbLinks();
+
+        _webDriver.Quit();
+        _webDriver.Dispose();
     }
 
     private async Task UpdateAuctionLinks(SearchConfig config)
@@ -68,38 +96,10 @@ public class EbayScraperService : IScraperService
                     });
             }
         }
-        catch (OpenQA.Selenium.WebDriverException e)
+        catch (WebDriverException e)
         {
             _logger.LogError("OpenQA.Selenium.WebDriverException: {Message}", e.Message);
         }
-    }
-
-    public async Task RunTaskAsync()
-    {
-        _logger.LogInformation("Starting Ebay Scraper");
-
-        _logger.LogInformation("Processing unprocessed links from previous runs");
-
-        await ProcessDbLinks();
-
-        using var connection = _connFactory.CreateConnection();
-
-        _logger.LogInformation("Retrieving search configs");
-        var configs = await connection.QueryAsync<SearchConfig>(
-            "SELECT search_config_id, vehicle_id, make, model, years, body_type, make_encoded, model_encoded FROM ebaymotors.searchconfig;");
-
-
-        _logger.LogInformation("Searching for new auction links");
-
-        foreach (var config in configs)
-            await UpdateAuctionLinks(config);
-
-        _logger.LogInformation("Finished searching for new auction links");
-
-        await ProcessDbLinks();
-
-        _webDriver.Quit();
-        _webDriver.Dispose();
     }
 
     private async Task ProcessDbLinks()
@@ -122,7 +122,7 @@ public class EbayScraperService : IScraperService
             {
                 await ProcessLink(link);
             }
-            catch (OpenQA.Selenium.WebDriverException e)
+            catch (WebDriverException e)
             {
                 _logger.LogError("OpenQA.Selenium.WebDriverException: {Message}", e.Message);
 
@@ -258,17 +258,13 @@ public class EbayScraperService : IScraperService
         _logger.LogInformation("Marking auction as processed (auctionId = {auctionId})", auctionId);
         using var connection = _connFactory.CreateConnection();
         if (string.IsNullOrEmpty(errorMessage))
-        {
             await connection.ExecuteAsync(
                 "update ebaymotors.links set is_processed = true, processed_at = now(), error_message = @errorMessage, processing_attempts = COALESCE(processing_attempts, 0) + 1 where auction_id = @AuctionId;",
                 new { AuctionId = auctionId, errorMessage });
-        }
         else
-        {
             await connection.ExecuteAsync(
                 "update ebaymotors.links set error_message = @errorMessage, processing_attempts = COALESCE(processing_attempts, 0) + 1 where auction_id = @AuctionId;",
                 new { AuctionId = auctionId, errorMessage });
-        }
     }
 
 

@@ -8,7 +8,7 @@ public class Worker : IHostedService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IScraperService _service;
-    
+
     public Worker(ILogger<Worker> logger, IScraperService service)
     {
         _logger = logger;
