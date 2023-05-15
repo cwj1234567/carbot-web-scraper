@@ -21,153 +21,177 @@ public class BatScraperService : IScraperService
         _connFactory = connFactory;
     }
 
+
     public async Task RunTaskAsync()
     {
         _logger.LogInformation("Scraping bring-a-trailer.com");
 
         using var httpClient = new HttpClient();
-
         IEnumerable<int> keywordPageIds;
+
         using (var connection = _connFactory.CreateConnection())
         {
-            keywordPageIds =
-                connection.Query<int>("SELECT keyword_page_id FROM bringatrailer.keywordpages");
+            keywordPageIds = connection.Query<int>("SELECT keyword_page_id FROM bringatrailer.keywordpages");
         }
 
         foreach (var keywordPageId in keywordPageIds)
         {
-            var loopIt = true;
-
             var page = 1;
-            while (loopIt)
-            {
-                var task = httpClient.GetFromJsonAsync<BatKeywordPage>(
-                    $"https://bringatrailer.com/wp-json/bringatrailer/1.0/data/keyword-filter?bat_keyword_pages={keywordPageId}&sort=td&page={page}&results=items");
-                var result = task.Result;
 
-                bool? ended = null;
-                decimal bidValue = 0;
+            BatKeywordPage result;
+            do
+            {
+                var url =
+                    $"https://bringatrailer.com/wp-json/bringatrailer/1.0/data/keyword-filter?bat_keyword_pages={keywordPageId}&sort=td&page={page}&results=items";
+                result = await httpClient.GetFromJsonAsync<BatKeywordPage>(url).ConfigureAwait(false);
 
                 var newItems = GetNonExistentAuctionItems(result.items);
 
                 foreach (var item in newItems)
                 {
-                    DateTime endDate;
-                    string[] splitUrl;
-                    try
-                    {
-                        splitUrl = (item.url.Replace("https://bringatrailer.com/listing/", "")).Replace("/", "")
-                            .Split("-");
-
-
-                        if (!item.subtitle.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
-                                out DateTimeRoutines.ParsedDateTime parsedDateTime))
-                            _logger.LogWarning("Could not parse date {date} (url = {url})", item.subtitle);
-
-                        endDate = parsedDateTime.DateTime;
-
-
-                        var splitSubtitle = item.subtitle.Split(" ");
-
-                        ended = splitSubtitle[0] switch
-                        {
-                            "Sold" => true,
-                            "Bid" => false,
-                            _ => ended
-                        };
-
-                        try
-                        {
-                            bidValue = decimal.Parse(splitSubtitle[2].Replace("$", "").Replace(",", ""));
-                        }
-                        catch (Exception)
-                        {
-                            _logger.LogWarning("Could not parse bid value (url = {url})", item.url);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e.Message);
-                        continue;
-                    }
-
-
-                    Dictionary<string, string> vehicleInfo;
-                    try
-                    {
-                        vehicleInfo = (await ValidateVehicleInfo(item.url));
-                    }
-                    catch (ArgumentException e)
-                    {
-                        _logger.LogWarning("Could not validate vehicle data (url = {url})", item.url);
-                        continue;
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e.Message);
-                        continue;
-                    }
-
-                    var year = 0;
-
-                    try
-                    {
-                        year = int.Parse(splitUrl[0]);
-                    }
-                    catch (Exception)
-                    {
-                        try
-                        {
-                            year = int.Parse(vehicleInfo["Year"]);
-                        }
-                        catch (Exception)
-                        {
-                            _logger.LogWarning("Could not parse year (url = {url})", item.url);
-                            continue;
-                        }
-                    }
-
-                    if (year == 0)
-                        continue;
-
-                    try
-                    {
-                        using (var connection = _connFactory.CreateConnection())
-                        {
-                            await connection.ExecuteAsync(
-                                "insert into bringatrailer.auctions(auction_id, auction_url, year, make, model, bid_value, end_date, ended, updated_at, keyword_page_id ) " +
-                                "values (@AuctionId, @AuctionUrl, @Year, @Make, @Model, @BidValue, @EndDate, @Ended, @UpdatedAt, @KeywordPageId) " +
-                                "on conflict do nothing;",
-                                new
-                                {
-                                    AuctionId = Guid.NewGuid(),
-                                    AuctionUrl = item.url,
-                                    Year = year,
-                                    Make = splitUrl[1],
-                                    Model = splitUrl[2],
-                                    BidValue = bidValue,
-                                    EndDate = endDate,
-                                    Ended = ended,
-                                    UpdatedAt = DateTime.Now,
-                                    KeywordPageId = keywordPageId
-                                });
-                        }
-                    }
-                    catch (System.IndexOutOfRangeException)
-                    {
-                        _logger.LogWarning("Could not parse url {url}", item.url);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e.Message);
-                    }
+                    await ProcessItem(item, keywordPageId).ConfigureAwait(false);
                 }
 
-                if (result.page_current == result.page_maximum)
-                    loopIt = false;
-
                 page++;
+            } while (result.page_current != result.page_maximum);
+        }
+    }
+
+
+    private async Task ProcessItem(Item item, int keywordPageId)
+    {
+        try
+        {
+            var (splitUrl, endDate, ended, bidValue) = ProcessItemMetadata(item);
+            var vehicleInfo = await ValidateAndGetVehicleInfo(item.url).ConfigureAwait(false);
+
+            var year = ExtractYear(splitUrl, vehicleInfo);
+            if (year == 0)
+                return;
+
+            await SaveAuction(item, splitUrl, endDate, ended, bidValue, year, keywordPageId).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e.Message);
+        }
+    }
+
+    private (string[] splitUrl, DateTime endDate, bool? ended, decimal bidValue) ProcessItemMetadata(Item item)
+    {
+        var splitUrl = (item.url.Replace("https://bringatrailer.com/listing/", "")).Replace("/", "").Split("-");
+        var endDate = ParseEndDate(item.subtitle);
+        var (ended, bidValue) = ParseSubtitle(item.subtitle);
+
+        return (splitUrl, endDate, ended, bidValue);
+    }
+
+    private DateTime ParseEndDate(string subtitle)
+    {
+        if (!subtitle.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
+                out DateTimeRoutines.ParsedDateTime parsedDateTime))
+        {
+            _logger.LogWarning("Could not parse date {date}", subtitle);
+        }
+
+        return parsedDateTime.DateTime;
+    }
+
+    private (bool? ended, decimal bidValue) ParseSubtitle(string subtitle)
+    {
+        var splitSubtitle = subtitle.Split(" ");
+
+        var ended = splitSubtitle[0] switch
+        {
+            "Sold" => true,
+            "Bid" => false,
+            _ => (bool?)null
+        };
+
+        var bidValue = ParseBidValue(splitSubtitle[2]);
+
+        return (ended, bidValue);
+    }
+
+    private decimal ParseBidValue(string bidText)
+    {
+        try
+        {
+            return decimal.Parse(bidText.Replace("$", "").Replace(",", ""));
+        }
+        catch (Exception)
+        {
+            _logger.LogWarning("Could not parse bid value {bidValue}", bidText);
+            return 0;
+        }
+    }
+
+    private async Task<Dictionary<string, string>> ValidateAndGetVehicleInfo(string url)
+    {
+        try
+        {
+            return await ValidateVehicleInfo(url).ConfigureAwait(false);
+        }
+        catch (ArgumentException e)
+        {
+            _logger.LogWarning("Could not validate vehicle data (url = {url})", url);
+            throw;
+        }
+    }
+
+    private int ExtractYear(string[] splitUrl, Dictionary<string, string> vehicleInfo)
+    {
+        var year = 0;
+
+        try
+        {
+            year = int.Parse(splitUrl[0]);
+        }
+        catch (Exception)
+        {
+            try
+            {
+                year = int.Parse(vehicleInfo["Year"]);
             }
+            catch (Exception)
+            {
+                _logger.LogWarning("Could not parse year from url");
+            }
+        }
+
+        return year;
+    }
+
+    private async Task SaveAuction(Item item, string[] splitUrl, DateTime endDate, bool? ended, decimal bidValue,
+        int year, int keywordPageId)
+    {
+        try
+        {
+            using (var connection = _connFactory.CreateConnection())
+            {
+                await connection.ExecuteAsync(
+                    "insert into bringatrailer.auctions(auction_id, auction_url, year, make, model, bid_value, end_date, ended, updated_at, keyword_page_id ) " +
+                    "values (@AuctionId, @AuctionUrl, @Year, @Make, @Model, @BidValue, @EndDate, @Ended, @UpdatedAt, @KeywordPageId) " +
+                    "on conflict do nothing;",
+                    new
+                    {
+                        AuctionId = Guid.NewGuid(),
+                        AuctionUrl = item.url,
+                        Year = year,
+                        Make = splitUrl[1],
+                        Model = splitUrl[2],
+                        BidValue = bidValue,
+                        EndDate = endDate,
+                        Ended = ended,
+                        UpdatedAt = DateTime.Now,
+                        KeywordPageId = keywordPageId
+                    }).ConfigureAwait(false);
+            }
+        }
+        catch (System.IndexOutOfRangeException)
+        {
+            _logger.LogWarning("Could not parse url {url}", item.url);
+            throw;
         }
     }
 
