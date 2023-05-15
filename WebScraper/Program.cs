@@ -6,9 +6,10 @@ using WebScraper.Database;
 using WebScraper.Services;
 using WebScraper.Helpers;
 using Microsoft.Extensions.Logging;
+using WebScraper;
+using WebScraper.Services.Interfaces;
 
 var builder = new ConfigurationBuilder();
-
 
 // Add configuration from appsettings.json
 builder.AddJsonFile("appsettings.json",
@@ -27,14 +28,13 @@ Log.Logger.Information("Start");
 // map the c# pascal case model property names to the pgsql snake case column names
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-
 // build host and configure our DI services
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
         // Add custom SSH logger
-        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(provider =>
-            provider.GetService<ILoggerFactory>().CreateLogger("SshLogger"));
+        services.AddSingleton(provider =>
+            provider.GetService<ILoggerFactory>()?.CreateLogger("SshLogger"));
 
         // Update the PgConnectionFactory registration
         services.AddTransient<PgConnectionFactory>();
@@ -42,9 +42,24 @@ var host = Host.CreateDefaultBuilder()
         services.AddSingleton<SshTunnel>();
 
         services.AddSingleton<WebDriverHelper>(); // selenium webdriver
-        services.AddSingleton<CabScraperService>();
-        services.AddSingleton<BatScraperService>();
-        services.AddSingleton<EbayScraperService>();
+
+        // Register your services as IMyService
+        var serviceToRun = Environment.GetEnvironmentVariable("SCRAPER_SERVICE");
+        switch (serviceToRun?.ToLowerInvariant())
+        {
+            case "cab":
+                services.AddSingleton<IScraperService, CabScraperService>();
+                break;
+            case "bat":
+                services.AddSingleton<IScraperService, BatScraperService>();
+                break;
+            default:
+                services.AddSingleton<IScraperService, EbayScraperService>();
+                break;
+        }
+
+        // Add worker
+        services.AddHostedService<Worker>();
     })
     .UseSerilog()
     .Build();
@@ -55,26 +70,15 @@ try
     Log.Logger.Information("Waiting ~30s for chrome driver to start");
     await Task.Delay(30000);
 
-
-    // run whatever service the environment variable is set to
-    var serviceToRun = Environment.GetEnvironmentVariable("SCRAPER_SERVICE");
-
-    switch (serviceToRun)
-    {
-        case "cab":
-            await host.Services.GetService<CabScraperService>().Scrape();
-            break;
-        case "bat":
-            await host.Services.GetService<BatScraperService>().Scrape();
-            break;
-        case "ebay":
-            await host.Services.GetService<EbayScraperService>().Scrape();
-            break;
-        default:
-            await host.Services.GetService<EbayScraperService>().Scrape();
-            break;
-    }
-
+    // Start the host
+    await host.RunAsync();
+}
+catch (Exception e)
+{
+    Log.Logger.Fatal(e, "Error");
+}
+finally
+{
     // http request to web api to reset the cache
     var client = new HttpClient();
     client.DefaultRequestHeaders.Add("X-Api-Key", builder.Build().GetSection("CarbotApiKey").Value);
@@ -84,10 +88,7 @@ try
         Log.Logger.Information("Cache cleared");
     else
         Log.Logger.Error("Cache clear failed");
-}
-catch (Exception e)
-{
-    Log.Logger.Fatal(e, "Error");
+
+    Log.Logger.Information("Stop");
 }
 
-Log.Logger.Information("Stop");

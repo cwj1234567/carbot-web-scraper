@@ -21,7 +21,7 @@ public class BatScraperService : IScraperService
         _connFactory = connFactory;
     }
 
-    public async Task Scrape()
+    public async Task RunTaskAsync()
     {
         _logger.LogInformation("Scraping bring-a-trailer.com");
 

@@ -75,7 +75,7 @@ public class EbayScraperService : IScraperService
         }
     }
 
-    public async Task Scrape()
+    public async Task RunTaskAsync()
     {
         _logger.LogInformation("Starting Ebay Scraper");
 

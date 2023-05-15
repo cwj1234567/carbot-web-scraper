@@ -165,7 +165,7 @@ public class CabScraperService : IScraperService
         };
     }
 
-    public async Task Scrape()
+    public async Task RunTaskAsync()
     {
         _logger.LogInformation("Scraping carsandbids.com");
         using var dbConnection = _connFactory.CreateConnection();
