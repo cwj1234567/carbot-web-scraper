@@ -38,14 +38,14 @@ public class BatScraperService : IScraperService
         {
             var page = 1;
 
-            BatKeywordPage result;
+            BatKeywordPage? result;
             do
             {
                 var url =
                     $"https://bringatrailer.com/wp-json/bringatrailer/1.0/data/keyword-filter?bat_keyword_pages={keywordPageId}&sort=td&page={page}&results=items";
                 result = await httpClient.GetFromJsonAsync<BatKeywordPage>(url).ConfigureAwait(false);
 
-                var newItems = GetNonExistentAuctionItems(result.items);
+                var newItems = GetNonExistentAuctionItems(result?.items ?? throw new InvalidOperationException());
 
                 foreach (var item in newItems)
                 {

@@ -29,7 +29,6 @@ public class EbayScraperService : IScraperService
     }
 
     private async Task UpdateAuctionLinks(SearchConfig config)
-
     {
         var make = config.MakeEncoded ?? WebUtility.UrlEncode(config.Make);
         var model = config.ModelEncoded ?? WebUtility.UrlEncode(config.Model);
@@ -143,90 +142,13 @@ public class EbayScraperService : IScraperService
 
         try
         {
-            _webDriver.Url = link.AuctionUrl + "&orig_cvip=true";
-
-            WaitUntilElementExists(_webDriver, By.ClassName("ux-textspans"));
-
-            // take screenshot
+            NavigateToAuctionPage(link.AuctionUrl);
             await TakeScreenshot(link.AuctionId);
-
-            // auction status
-            var statusElement = _webDriver.FindElement(By.CssSelector("div[class='vim d-statusmessage']"));
-            var statusElementText = statusElement.Text;
-
-            // sometimes an item will get relisted for whatever reason, but it still appears in the sold listings
-            if (statusElementText.ToLower().Contains("relisted"))
-                throw new ListingIssueException("Vehicle has been relisted");
-
-            // I believe this means the seller sold the vehicle off of ebay
-            if (statusElementText.ToLower().Contains("because the item was sold"))
-                throw new ListingIssueException("Vehicle has been sold");
-
-            // Locate the price element
-            var priceLabelElement = _webDriver.FindElement(By.CssSelector(".x-price-primary .ux-textspans"));
-            var strikethrough = priceLabelElement.GetAttribute("class").Contains("ux-textspans--STRIKETHROUGH");
-
-            // this usually means it sold via bargain.  The sale price is not made public for bargain sales
-            if (strikethrough)
-                throw new ListingIssueException("Could not confirm price");
-
-            var parameterDict = new Dictionary<string, string>();
-
-            IList<IWebElement> elements =
-                _webDriver.FindElements(By.CssSelector("div.vim.x-about-this-item div.ux-layout-section__row"));
-
-            foreach (var element in elements)
-            {
-                var labelElements =
-                    element.FindElements(By.CssSelector("div.ux-labels-values__labels span.ux-textspans"));
-                var valueElements =
-                    element.FindElements(By.CssSelector("div.ux-labels-values__values span.ux-textspans"));
-
-                for (var i = 0; i < labelElements.Count; i++)
-                {
-                    var label = labelElements[i].Text.Replace(":", "");
-                    var value = valueElements[i].Text;
-                    parameterDict.Add(label, value);
-                }
-            }
-
-            var priceElement =
-                _webDriver.FindElement(By.CssSelector("div.vim-buybox-wrapper span[itemprop='price']"));
-            var price = priceElement.GetAttribute("content");
-
-            DateTimeRoutines.ParsedDateTime parsedDateTime;
-            try
-            {
-                // Try the first CSS selector
-                var dateElement =
-                    _webDriver.FindElement(
-                        By.CssSelector("div.vi-bboxrev-posabs.vi-bboxrev-dsplinline > span#bb_tlft"));
-
-                if (!dateElement.Text.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
-                        out parsedDateTime))
-                    throw new ListingIssueException("Could not parse end time");
-            }
-            catch (NoSuchElementException)
-            {
-                try
-                {
-                    // If the first CSS selector fails, try the second one
-                    var dateElementTimer =
-                        _webDriver.FindElement(By.CssSelector("div.vim.x-timer-module > span.x-timer-module__timer"));
-
-                    if (!dateElementTimer.Text.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
-                            out parsedDateTime))
-                        throw new ListingIssueException("Could not parse end time");
-                }
-                catch (NoSuchElementException)
-                {
-                    // If both CSS selectors fail, throw an exception
-                    throw new ListingIssueException("Could not find end time element");
-                }
-            }
-
-            await InsertData(parameterDict, price, link.AuctionId, parsedDateTime.DateTime, statusElementText,
-                link.SearchConfigId);
+            var statusElementText = CheckAuctionStatus();
+            var price = GetPrice();
+            var parameterDict = GetParameterDictionary();
+            var endTime = GetAuctionEndTime();
+            await InsertData(parameterDict, price, link.AuctionId, endTime, statusElementText, link.SearchConfigId);
         }
         catch (ListingIssueException ex)
         {
@@ -243,6 +165,93 @@ public class EbayScraperService : IScraperService
             await MarkLinkAsProcessed(link.AuctionId, errorMessage);
         }
     }
+
+
+    private void NavigateToAuctionPage(string auctionUrl)
+    {
+        _webDriver.Url = auctionUrl + "&orig_cvip=true";
+        WaitUntilElementExists(_webDriver, By.ClassName("ux-textspans"));
+    }
+
+    private string CheckAuctionStatus()
+    {
+        var statusElement = _webDriver.FindElement(By.CssSelector("div[class='vim d-statusmessage']"));
+        var statusElementText = statusElement.Text;
+
+        if (statusElementText.ToLower().Contains("relisted"))
+            throw new ListingIssueException("Vehicle has been relisted");
+
+        if (statusElementText.ToLower().Contains("because the item was sold"))
+            throw new ListingIssueException("Vehicle has been sold");
+
+        return statusElementText;
+    }
+
+    private string GetPrice()
+    {
+        var priceLabelElement = _webDriver.FindElement(By.CssSelector(".x-price-primary .ux-textspans"));
+        var strikethrough = priceLabelElement.GetAttribute("class").Contains("ux-textspans--STRIKETHROUGH");
+
+        if (strikethrough)
+            throw new ListingIssueException("Could not confirm price");
+
+        var priceElement = _webDriver.FindElement(By.CssSelector("div.vim-buybox-wrapper span[itemprop='price']"));
+        return priceElement.GetAttribute("content");
+    }
+
+    private Dictionary<string, string> GetParameterDictionary()
+    {
+        var parameterDict = new Dictionary<string, string>();
+        IList<IWebElement> elements =
+            _webDriver.FindElements(By.CssSelector("div.vim.x-about-this-item div.ux-layout-section__row"));
+
+        foreach (var element in elements)
+        {
+            var labelElements = element.FindElements(By.CssSelector("div.ux-labels-values__labels span.ux-textspans"));
+            var valueElements = element.FindElements(By.CssSelector("div.ux-labels-values__values span.ux-textspans"));
+
+            for (var i = 0; i < labelElements.Count; i++)
+            {
+                var label = labelElements[i].Text.Replace(":", "");
+                var value = valueElements[i].Text;
+                parameterDict.Add(label, value);
+            }
+        }
+
+        return parameterDict;
+    }
+
+    private DateTime GetAuctionEndTime()
+    {
+        DateTimeRoutines.ParsedDateTime parsedDateTime;
+        try
+        {
+            var dateElement =
+                _webDriver.FindElement(By.CssSelector("div.vi-bboxrev-posabs.vi-bboxrev-dsplinline > span#bb_tlft"));
+
+            if (!dateElement.Text.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE, out parsedDateTime))
+                throw new ListingIssueException("Could not parse end time");
+        }
+        catch (NoSuchElementException)
+        {
+            try
+            {
+                var dateElementTimer =
+                    _webDriver.FindElement(By.CssSelector("div.vim.x-timer-module > span.x-timer-module__timer"));
+
+                if (!dateElementTimer.Text.TryParseDateOrTime(DateTimeRoutines.DateTimeFormat.USA_DATE,
+                        out parsedDateTime))
+                    throw new ListingIssueException("Could not parse end time");
+            }
+            catch (NoSuchElementException)
+            {
+                throw new ListingIssueException("Could not find end time element");
+            }
+        }
+
+        return parsedDateTime.DateTime;
+    }
+
 
     private async Task MarkLinkAsProcessed(Guid auctionId, string errorMessage)
     {
